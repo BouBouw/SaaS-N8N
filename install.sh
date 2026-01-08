@@ -75,6 +75,33 @@ echo "✅ Firewall configuré"
 
 # 5. Installation de Nginx
 echo "🌐 Installation de Nginx..."
+
+# Vérifier si le port 80 est occupé
+if lsof -Pi :80 -sTCP:LISTEN -t >/dev/null 2>&1 ; then
+    echo "⚠️  Le port 80 est déjà utilisé"
+    
+    # Identifier le processus
+    PORT_80_PROCESS=$(lsof -Pi :80 -sTCP:LISTEN | grep LISTEN | awk '{print $1}' | head -1)
+    echo "   Processus détecté: $PORT_80_PROCESS"
+    
+    # Arrêter Apache2 s'il est détecté
+    if systemctl is-active --quiet apache2; then
+        echo "   Arrêt d'Apache2..."
+        systemctl stop apache2
+        systemctl disable apache2
+    fi
+    
+    # Arrêter tout ancien Nginx
+    if systemctl is-active --quiet nginx; then
+        echo "   Arrêt de l'ancien Nginx..."
+        systemctl stop nginx
+    fi
+    
+    # Tuer les processus restants sur le port 80
+    fuser -k 80/tcp 2>/dev/null || true
+    sleep 2
+fi
+
 if ! command -v nginx &> /dev/null; then
     apt install -y nginx
     systemctl enable nginx
@@ -82,6 +109,9 @@ if ! command -v nginx &> /dev/null; then
     echo "✅ Nginx installé"
 else
     echo "✅ Nginx déjà installé"
+    # S'assurer qu'il démarre
+    systemctl enable nginx
+    systemctl start nginx 2>/dev/null || echo "   Nginx sera configuré plus tard"
 fi
 
 # 6. Installation de Certbot
