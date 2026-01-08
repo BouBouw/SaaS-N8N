@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: saas-n8n-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-saas_n8n}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3307:3306"
+    networks:
+      - saas-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: saas-n8n-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: saasuser
+      DB_PASSWORD: saaspassword
+      DB_NAME: ${DB_NAME:-saas_n8n}
+      JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_change_this}
+      JWT_EXPIRES_IN: 7d
+      DOCKER_SOCKET: /var/run/docker.sock
+      N8N_BASE_PORT: 5678
+      N8N_NETWORK: n8n_network
+      BASE_DOMAIN: ${BASE_DOMAIN:-boubouw.com}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - n8n_volumes:/app/volumes
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    networks:
+      - saas-network
+      - n8n_network
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+        VITE_BASE_DOMAIN: ${BASE_DOMAIN:-boubouw.com}
+    container_name: saas-n8n-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - saas-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: saas-n8n-nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - nginx_logs:/var/log/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - saas-network
+      - n8n_network
+
+volumes:
+  mysql_data:
+    driver: local
+  n8n_volumes:
+    driver: local
+  nginx_logs:
+    driver: local
+
+networks:
+  saas-network:
+    driver: bridge
+  n8n_network:
+    external: true
+    name: n8n_network

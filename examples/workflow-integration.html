@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N8N Workflows Integration Example</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        .api-key-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .api-key-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .workflows-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .workflow-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        .workflow-card:hover {
+            transform: translateY(-5px);
+        }
+        .workflow-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .workflow-active {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .workflow-active.active {
+            background: #10b981;
+            color: white;
+        }
+        .workflow-active.inactive {
+            background: #ef4444;
+            color: white;
+        }
+        .workflow-nodes {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .workflow-created {
+            color: #999;
+            font-size: 12px;
+        }
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            padding: 40px;
+        }
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 N8N Workflows Integration</h1>
+        
+        <div class="api-key-section">
+            <h2 style="margin-bottom: 15px;">Configure API Key</h2>
+            <input 
+                type="text" 
+                id="apiKeyInput" 
+                class="api-key-input" 
+                placeholder="Enter your API key (x-api-key)"
+                value="YOUR_API_KEY_HERE"
+            >
+            <button class="btn" onclick="loadWorkflows()">Load Workflows</button>
+        </div>
+
+        <div id="error" style="display:none;" class="error-message"></div>
+        
+        <div id="stats" style="display:none;" class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalWorkflows">0</div>
+                <div class="stat-label">Total Workflows</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="activeWorkflows">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="inactiveWorkflows">0</div>
+                <div class="stat-label">Inactive</div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display:none;">
+            Loading workflows...
+        </div>
+
+        <div id="workflows" class="workflows-grid"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+
+        async function loadWorkflows() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            
+            if (!apiKey) {
+                showError('Please enter your API key');
+                return;
+            }
+
+            hideError();
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('workflows').innerHTML = '';
+            document.getElementById('stats').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/workflows/public`, {
+                    method: 'GET',
+                    headers: {
+                        'x-api-key': apiKey,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to load workflows');
+                }
+
+                const data = await response.json();
+                displayWorkflows(data.data.workflows);
+                updateStats(data.data.workflows);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function displayWorkflows(workflows) {
+            const container = document.getElementById('workflows');
+            
+            if (!workflows || workflows.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:white; padding:40px;">No workflows found</div>';
+                return;
+            }
+
+            container.innerHTML = workflows.map(workflow => `
+                <div class="workflow-card">
+                    <div class="workflow-name">${workflow.name || 'Unnamed Workflow'}</div>
+                    <span class="workflow-active ${workflow.active ? 'active' : 'inactive'}">
+                        ${workflow.active ? 'Active' : 'Inactive'}
+                    </span>
+                    <div class="workflow-nodes">
+                        📦 ${workflow.nodes?.length || 0} nodes
+                    </div>
+                    ${workflow.tags ? `<div class="workflow-nodes">🏷️ ${workflow.tags.join(', ')}</div>` : ''}
+                    <div class="workflow-created">
+                        Created: ${new Date(workflow.createdAt).toLocaleDateString()}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats(workflows) {
+            const total = workflows.length;
+            const active = workflows.filter(w => w.active).length;
+            const inactive = total - active;
+
+            document.getElementById('totalWorkflows').textContent = total;
+            document.getElementById('activeWorkflows').textContent = active;
+            document.getElementById('inactiveWorkflows').textContent = inactive;
+            document.getElementById('stats').style.display = 'flex';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        // Load workflows on page load if API key is set
+        window.addEventListener('load', () => {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (apiKey && apiKey !== 'YOUR_API_KEY_HERE') {
+                loadWorkflows();
+            }
+        });
+    </script>
+</body>
+</html>
