@@ -3,6 +3,7 @@ import config from '../config/index.js';
 import * as Instance from '../models/Instance.js';
 import { generateSubdomain } from '../utils/helpers.js';
 import { getDockerLimits, DEFAULT_PLAN } from '../config/plans.js';
+import NginxService from './nginxService.js';
 
 const docker = new Docker({ socketPath: config.docker.socketPath });
 
@@ -106,6 +107,9 @@ export const provisionInstance = async (userId, userEmail) => {
       port
     );
 
+    // Configure Nginx for this instance
+    await NginxService.addN8NUpstream(subdomain, port);
+
     console.log(`✅ Instance provisioned successfully for user ${userId}`);
 
     return {
@@ -195,6 +199,9 @@ export const deleteInstance = async (userId) => {
     } catch (error) {
       console.log('Container may already be stopped');
     }
+
+    // Remove Nginx configuration
+    await NginxService.removeN8NUpstream(instance.subdomain);
     
     // Remove container
     await container.remove();
