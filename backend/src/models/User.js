@@ -33,7 +33,8 @@ export const findAllUsers = async () => {
       u.created_at,
       i.subdomain,
       i.status as instance_status,
-      (SELECT COUNT(*) FROM api_keys WHERE user_id = u.id) as api_keys_count
+      (SELECT COUNT(*) FROM api_keys WHERE user_id = u.id) as api_keys_count,
+      (SELECT id FROM api_keys WHERE user_id = u.id LIMIT 1) as api_key_id
     FROM users u
     LEFT JOIN instances i ON u.id = i.user_id
     ORDER BY u.created_at DESC

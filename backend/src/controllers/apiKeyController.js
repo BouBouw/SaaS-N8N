@@ -1,5 +1,6 @@
 import * as ApiKey from '../models/ApiKey.js';
 import { generateApiKey } from '../utils/apiKey.js';
+import * as Instance from '../models/Instance.js';
 
 export const createApiKey = async (req, res) => {
   try {
@@ -13,6 +14,15 @@ export const createApiKey = async (req, res) => {
       });
     }
 
+    // Check if user has an instance
+    const instance = await Instance.findInstanceByUserId(userId);
+    if (!instance) {
+      return res.status(400).json({
+        success: false,
+        error: 'Vous devez avoir une instance active pour créer une clé API.'
+      });
+    }
+
     // Check if user already has an API key (limit to 1)
     const existingKeys = await ApiKey.findApiKeyByUserId(userId);
     if (existingKeys.length >= 1) {
@@ -22,7 +32,7 @@ export const createApiKey = async (req, res) => {
       });
     }
 
-    const result = await ApiKey.createApiKey(userId, name);
+    const result = await ApiKey.createApiKey(userId, instance.id, name);
 
     res.status(201).json({
       success: true,

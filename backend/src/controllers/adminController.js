@@ -1,6 +1,7 @@
 import { findAllUsers, findUserById, updateUserRole, deleteUser } from '../models/User.js';
 import { deleteInstance } from '../services/instanceService.js';
 import { query } from '../config/database.js';
+import { decryptApiKey } from '../utils/apiKey.js';
 
 export const getUsers = async (req, res) => {
   try {
@@ -88,6 +89,27 @@ export const getUserStats = async (req, res) => {
     res.json(stats[0]);
   } catch (error) {
     console.error('Erreur lors de la récupération des statistiques:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+};
+
+export const getUserApiKey = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get user's API key directly (admin bypass)
+    const apiKeys = await query('SELECT id, encrypted_key FROM api_keys WHERE user_id = ? LIMIT 1', [id]);
+    
+    if (apiKeys.length === 0) {
+      return res.status(404).json({ message: 'Aucune clé API trouvée pour cet utilisateur' });
+    }
+
+    const apiKey = apiKeys[0];
+    const decryptedKey = decryptApiKey(apiKey.encrypted_key);
+
+    res.json({ apiKey: decryptedKey });
+  } catch (error) {
+    console.error('Erreur lors de la récupération de la clé API:', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };

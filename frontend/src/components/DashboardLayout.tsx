@@ -63,10 +63,6 @@ const DashboardLayout: React.FC = () => {
         { name: "Bibliothèque", path: '/library', icon: Library }
     ];
 
-    if (user?.role === 'admin') {
-        navigation.push({ name: 'Administration', path: '/admin', icon: Users });
-    }
-
     return (
         <div className="min-h-screen bg-[#030709]">
             {/* Mobile sidebar backdrop */}
@@ -176,14 +172,26 @@ const DashboardLayout: React.FC = () => {
 
                     {/* Settings button */}
                     <div className="p-4 flex flex-col">
+                        {user?.role === 'admin' && (
+                            <Link
+                                to="/admin"
+                                title={sidebarCollapsed ? 'Paramètres' : undefined}
+                                className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} w-full px-3 py-2.5 rounded-lg transition-colors ${isActive('/admin')
+                                        ? 'bg-[#05F26C] text-[#132426] shadow-md'
+                                        : 'text-white hover:bg-[#05F26C]/25'
+                                    }`}
+                            >
+                                <Users className="w-5 h-5 flex-shrink-0" />
+                                {!sidebarCollapsed && <span className="font-medium">Administration</span>}
+                            </Link>
+                        )}
                         <Link
                             to="/settings"
                             title={sidebarCollapsed ? 'Paramètres' : undefined}
-                            className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} w-full px-3 py-2.5 rounded-lg transition-colors ${
-                                isActive('/settings')
+                            className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} w-full px-3 py-2.5 rounded-lg transition-colors ${isActive('/settings')
                                     ? 'bg-[#05F26C] text-[#132426] shadow-md'
                                     : 'text-white hover:bg-[#05F26C]/25'
-                            }`}
+                                }`}
                         >
                             <Settings className="w-5 h-5 flex-shrink-0" />
                             {!sidebarCollapsed && <span className="font-medium">Paramètres</span>}

@@ -3,17 +3,17 @@ import { v4 as uuidv4 } from 'uuid';
 import { hashApiKey, encryptApiKey, decryptApiKey } from '../utils/apiKey.js';
 import crypto from 'crypto';
 
-export const createApiKey = async (userId, name) => {
+export const createApiKey = async (userId, instanceId, name) => {
   const id = uuidv4();
   const apiKey = crypto.randomBytes(32).toString('hex');
   const hashedKey = hashApiKey(apiKey);
   const encryptedKey = encryptApiKey(apiKey);
   
   const sql = `
-    INSERT INTO api_keys (id, user_id, name, api_key, encrypted_key, created_at)
-    VALUES (?, ?, ?, ?, ?, NOW())
+    INSERT INTO api_keys (id, user_id, instance_id, name, api_key, encrypted_key, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, NOW())
   `;
-  await query(sql, [id, userId, name, hashedKey, encryptedKey]);
+  await query(sql, [id, userId, instanceId, name, hashedKey, encryptedKey]);
   
   // Return the plain API key only once (it won't be stored)
   return { id, apiKey, name };

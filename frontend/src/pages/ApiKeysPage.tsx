@@ -159,77 +159,87 @@ const ApiKeysPage: React.FC = () => {
   };
 
   return (
-    <div className="w-full p-4 space-y-6">
+    <div className="min-h-screen bg-[#030709]">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Clés API</h1>
-          <p className="mt-2 text-gray-400">
-            Gérez vos clés d'accès API pour l'intégration externe
-          </p>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          disabled={apiKeys.length >= 1}
-          className="flex items-center space-x-2 px-4 py-2.5 bg-[#05F26C] hover:bg-[#05F26C]/80 text-[#132426] rounded-lg font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Nouvelle clé</span>
-        </button>
-      </div>
-
-      {/* Limit notice */}
-      {apiKeys.length >= 1 && (
-        <div className="flex items-start space-x-3 p-4 bg-[#05F26C]/10 border border-[#05F26C]/30 rounded-xl">
-          <AlertCircle className="w-5 h-5 text-[#05F26C] mt-0.5" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-white">
-              Limite atteinte
-            </p>
-            <p className="text-sm text-gray-400 mt-1">
-              Vous avez atteint la limite d'1 clé API par utilisateur. Supprimez votre clé existante pour en créer une nouvelle.
-            </p>
+      <div className="bg-[#132426] border-b border-[#0a1b1e] px-6 py-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-[#05F26C] rounded-lg flex items-center justify-center">
+              <Key className="w-6 h-6 text-[#132426]" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Clés API</h1>
+              <p className="text-gray-400 mt-1">Gérez vos clés d'accès API pour l'intégration externe</p>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* API Keys List */}
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-[#05F26C] border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : apiKeys.length === 0 ? (
-        <div className="text-center py-12 bg-[#132426] rounded-xl border-2 border-dashed border-[#0a1b1e]">
-          <Key className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-white mb-2">
-            Aucune clé API
-          </h3>
-          <p className="text-gray-400 mb-4">
-            Créez votre première clé pour commencer à utiliser l'API
-          </p>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-[#05F26C] hover:bg-[#05F26C]/80 text-[#132426] rounded-lg font-semibold transition-all"
+            disabled={apiKeys.length >= 1}
+            className="flex items-center space-x-2 px-4 py-2.5 bg-[#05F26C] hover:bg-[#05F26C]/80 text-[#132426] rounded-lg font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             <Plus className="w-5 h-5" />
-            <span>Créer une clé</span>
+            <span>Nouvelle clé</span>
           </button>
         </div>
-      ) : (
-        <div className="bg-[#132426] rounded-xl shadow-xl border border-[#0a1b1e] overflow-hidden">
-          <div className="divide-y divide-[#0a1b1e]">
+      </div>
+
+      <div className="px-6 py-8 space-y-6">
+        {/* Limit notice */}
+        {apiKeys.length >= 1 && (
+          <div className="flex items-start space-x-3 p-4 bg-[#05F26C]/10 border border-[#05F26C]/30 rounded-lg">
+            <AlertCircle className="w-5 h-5 text-[#05F26C] mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-white">
+                Limite atteinte
+              </p>
+              <p className="text-sm text-gray-400 mt-1">
+                Vous avez atteint la limite d'1 clé API par utilisateur. Supprimez votre clé existante pour en créer une nouvelle.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* API Keys List */}
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="w-8 h-8 border-4 border-[#05F26C] border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : apiKeys.length === 0 ? (
+          <div className="text-center py-12 bg-[#132426] border border-[#0a1b1e] rounded-lg">
+            <Key className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-white mb-2">
+              Aucune clé API
+            </h3>
+            <p className="text-gray-400 mb-4">
+              Créez votre première clé pour commencer à utiliser l'API
+            </p>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-[#05F26C] hover:bg-[#05F26C]/80 text-[#132426] rounded-lg font-semibold transition-all"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Créer une clé</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid gap-4">
             {apiKeys.map((key) => {
               const revealed = getRevealedKey(key.id);
               return (
-                <div key={key.id} className="p-6 hover:bg-[#05F26C]/5 transition-colors">
-                  <div className="flex items-center justify-between">
+                <div key={key.id} className="bg-[#132426] border border-[#0a1b1e] rounded-lg p-6 shadow-2xl hover:border-[#05F26C]/20 transition-all">
+                  <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4 flex-1">
-                      <div className="w-10 h-10 bg-[#05F26C] rounded-lg flex items-center justify-center shrink-0">
-                        <Key className="w-5 h-5 text-[#132426]" />
+                      <div className="w-10 h-10 bg-[#05F26C]/10 rounded-lg flex items-center justify-center shrink-0">
+                        <Key className="w-5 h-5 text-[#05F26C]" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-semibold text-white">{key.name}</h3>
-                        <p className="text-sm text-gray-400 mt-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h3 className="text-lg font-semibold text-white">{key.name}</h3>
+                          <span className="px-2 py-0.5 bg-[#05F26C]/10 text-[#05F26C] text-xs font-medium rounded-full">
+                            Actif
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-400">
                           Créée le {new Date(key.created_at).toLocaleDateString('fr-FR', {
                             year: 'numeric',
                             month: 'long',
@@ -237,20 +247,23 @@ const ApiKeysPage: React.FC = () => {
                           })}
                         </p>
                         {revealed && (
-                          <div className="mt-3 flex items-center space-x-2">
-                            <input
-                              type="text"
-                              readOnly
-                              value={revealed.key}
-                              className="flex-1 px-3 py-2 border border-[#0a1b1e] rounded-lg bg-[#0a0e10] text-[#05F26C] text-sm font-mono"
-                            />
-                            <button
-                              onClick={() => copyToClipboard(revealed.key)}
-                              className="p-2 text-gray-400 hover:bg-[#05F26C]/10 hover:text-[#05F26C] rounded-lg transition-colors"
-                              title="Copier"
-                            >
-                              {copiedKey ? <Check className="w-5 h-5 text-[#05F26C]" /> : <Copy className="w-5 h-5" />}
-                            </button>
+                          <div className="mt-4">
+                            <label className="block text-xs font-medium text-gray-400 mb-2">Clé API</label>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="text"
+                                readOnly
+                                value={revealed.key}
+                                className="flex-1 px-3 py-2 border border-[#0a1b1e] rounded-lg bg-[#0a1b1e] text-[#05F26C] text-sm font-mono"
+                              />
+                              <button
+                                onClick={() => copyToClipboard(revealed.key)}
+                                className="p-2 text-gray-400 hover:bg-[#05F26C]/10 hover:text-[#05F26C] rounded-lg transition-colors"
+                                title="Copier"
+                              >
+                                {copiedKey ? <Check className="w-5 h-5 text-[#05F26C]" /> : <Copy className="w-5 h-5" />}
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -283,13 +296,13 @@ const ApiKeysPage: React.FC = () => {
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#132426] rounded-xl shadow-2xl border border-[#0a1b1e] max-w-lg w-full">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#132426] rounded-lg shadow-2xl border border-[#0a1b1e] max-w-lg w-full">
             <div className="p-6 border-b border-[#0a1b1e]">
               <h2 className="text-2xl font-bold text-white">
                 {newApiKey ? 'Clé API créée' : 'Nouvelle clé API'}
@@ -317,7 +330,7 @@ const ApiKeysPage: React.FC = () => {
                         type={showApiKey ? "text" : "password"}
                         readOnly
                         value={newApiKey}
-                        className="w-full px-4 py-2 pr-12 border border-[#0a1b1e] rounded-lg bg-[#0a0e10] text-[#05F26C] text-sm font-mono focus:ring-2 focus:ring-[#05F26C]/50"
+                        className="w-full px-4 py-2.5 pr-12 border border-[#0a1b1e] rounded-lg bg-[#0a1b1e] text-[#05F26C] text-sm font-mono focus:ring-2 focus:ring-[#05F26C]/50"
                       />
                       <button
                         type="button"
@@ -330,7 +343,7 @@ const ApiKeysPage: React.FC = () => {
                     </div>
                     <button
                       onClick={() => copyToClipboard(newApiKey)}
-                      className="px-4 py-2 bg-[#05F26C] hover:bg-[#05F26C]/80 text-[#132426] rounded-lg font-semibold transition-colors"
+                      className="px-4 py-2.5 bg-[#05F26C] hover:bg-[#05F26C]/80 text-[#132426] rounded-lg font-semibold transition-colors"
                       title="Copier"
                     >
                       {copiedKey ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
@@ -357,7 +370,7 @@ const ApiKeysPage: React.FC = () => {
                     value={keyName}
                     onChange={(e) => setKeyName(e.target.value)}
                     placeholder="Ex: Production API Key"
-                    className="w-full px-4 py-2.5 border border-[#0a1b1e] rounded-lg bg-[#0a0e10] text-white placeholder-gray-500 focus:ring-2 focus:ring-[#05F26C]/50 focus:border-[#05F26C] transition-all"
+                    className="w-full px-4 py-2.5 border border-[#0a1b1e] rounded-lg bg-[#0a1b1e] text-white placeholder-gray-500 focus:ring-2 focus:ring-[#05F26C]/50 focus:border-[#05F26C] transition-all outline-none"
                     required
                   />
                   <p className="text-xs text-gray-400 mt-2">

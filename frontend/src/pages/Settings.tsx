@@ -155,7 +155,7 @@ const Settings: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+      <div className="px-6 py-8 space-y-6">
         {/* Profile Section */}
         <div className="bg-[#132426] border border-[#0a1b1e] rounded-lg p-6">
           <div className="flex items-center space-x-3 mb-6">

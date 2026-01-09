@@ -1,5 +1,5 @@
 import express from 'express';
-import { getUsers, updateRole, deleteUserById, getUserStats } from '../controllers/adminController.js';
+import { getUsers, updateRole, deleteUserById, getUserStats, getUserApiKey } from '../controllers/adminController.js';
 import { verifyJWT } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -24,6 +24,9 @@ router.get('/stats', getUserStats);
 
 // Update user role
 router.put('/users/:id/role', updateRole);
+
+// Get user's API key (admin only)
+router.get('/users/:id/api-key', getUserApiKey);
 
 // Delete user
 router.delete('/users/:id', deleteUserById);
