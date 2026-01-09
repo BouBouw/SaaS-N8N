@@ -1,4 +1,4 @@
-import { Library as LibraryIcon, Search, Filter, Star, Download, Eye, Calendar, Heart, Code, X, Upload, Workflow } from 'lucide-react';
+import { Library as LibraryIcon, Search, Filter, Download, Heart, Code, X, Workflow } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { API_URL } from '../config/api';
@@ -23,7 +23,7 @@ export default function Library() {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'favorites' | 'instance'>('all');
   const [favorites, setFavorites] = useState<Workflow[]>([]);
   const [instanceWorkflows, setInstanceWorkflows] = useState<Workflow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
 
   useEffect(() => {
@@ -120,14 +120,14 @@ export default function Library() {
       <div className="px-6 py-8">
         <div className="flex gap-6">
           {/* Sidebar Categories */}
-          <div className="hidden lg:block w-64 flex-shrink-0">
+          <div className="hidden lg:block w-64 shrink-0">
             <div className="bg-[#132426] border border-[#0a1b1e] rounded-lg p-4 sticky top-6">
               <h3 className="text-white font-semibold mb-3">Catégories</h3>
               <div className="space-y-1">
                 {categories.map((category) => (
                   <button
                     key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
+                    onClick={() => setSelectedCategory(category.id as 'all' | 'favorites' | 'instance')}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors ${
                       selectedCategory === category.id
                         ? 'bg-[#05F26C] text-[#132426] font-semibold'

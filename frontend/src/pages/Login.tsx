@@ -89,10 +89,6 @@ export default function Login() {
               },
             },
             number: {
-              density: {
-                enable: true,
-                area: 800,
-              },
               value: 120,
             },
             opacity: {

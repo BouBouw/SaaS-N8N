@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { authService } from '../services/authService';
-import { User, Mail, Lock, Save, AlertCircle, CheckCircle, Trash2 } from 'lucide-react';
+import { User, Mail, Lock, Save, AlertCircle, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { API_URL } from '../config/api';
 import { useToast } from '../contexts/ToastContext';
@@ -11,7 +11,7 @@ const Settings: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
-  const { showToast, showDemand } = useToast();
+  const { showToast } = useToast();
 
   const [profileData, setProfileData] = useState({
     name: currentUser?.name || '',
@@ -374,7 +374,6 @@ const Settings: React.FC = () => {
                   onClick={() => {
                     setShowDeleteModal(false);
                     setDeletePassword('');
-                    setError(null);
                   }}
                   disabled={loading}
                   className="flex-1 px-4 py-2 bg-[#0a1b1e] hover:bg-[#132426] text-white rounded-lg transition-all disabled:opacity-50 border border-[#0a1b1e]"

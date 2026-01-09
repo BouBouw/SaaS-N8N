@@ -1,20 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
   Server, 
-  Circle, 
   Play, 
   Square, 
-  RefreshCw, 
   ExternalLink, 
   Activity,
   Cpu,
   HardDrive,
   Network,
   Clock,
-  Settings,
   Trash2,
   RotateCw,
-  Zap,
   Database
 } from 'lucide-react';
 import { 
@@ -71,7 +67,7 @@ interface HistoryData {
 }
 
 export default function Dashboard() {
-  const [user, setUser] = useState<User | null>(null);
+  const [_user, setUser] = useState<User | null>(null);
   const [instance, setInstance] = useState<Instance | null>(null);
   const [stats, setStats] = useState<InstanceStats | null>(null);
   const [history, setHistory] = useState<HistoryData[]>([]);

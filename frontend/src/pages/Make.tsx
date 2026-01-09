@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, Loader, Download, Upload, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import { Sparkles, Send, Loader, Download, Upload, CheckCircle, ExternalLink } from 'lucide-react';
 import { authService } from '../services/authService';
 import { API_URL } from '../config/api';
 
@@ -132,7 +132,7 @@ export default function Make() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePublish = async (workflow: any, messageId: string, description: string) => {
+  const handlePublish = async (workflow: any, _messageId: string, description: string) => {
     try {
       const response = await fetch(`${API_URL}/api/public-workflows`, {
         method: 'POST',

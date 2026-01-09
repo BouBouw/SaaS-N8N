@@ -14,7 +14,7 @@ export interface ToastProps {
 }
 
 export default function Toast({ 
-  id, 
+  id: _id, 
   type, 
   message, 
   onClose, 
@@ -59,7 +59,7 @@ export default function Toast({
 
   return (
     <div
-      className={`${getStyles()} border rounded-lg shadow-lg p-4 min-w-[320px] max-w-[400px] animate-slide-in`}
+      className={`${getStyles()} border rounded-lg shadow-lg p-4 min-w-[320px] max-w-100 animate-slide-in`}
     >
       <div className="flex items-start space-x-3">
         {getIcon()}

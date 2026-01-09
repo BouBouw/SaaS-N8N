@@ -5,7 +5,7 @@ import { loadSlim } from '@tsparticles/slim';
 import type { Container } from '@tsparticles/engine';
 import { authService } from '../services/authService';
 import { useToast } from '../contexts/ToastContext';
-import { User, Mail, Lock, UserPlus, Sparkles } from 'lucide-react';
+import { User, Mail, Lock, Sparkles } from 'lucide-react';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -90,10 +90,6 @@ export default function Register() {
               },
             },
             number: {
-              density: {
-                enable: true,
-                area: 800,
-              },
               value: 120,
             },
             opacity: {

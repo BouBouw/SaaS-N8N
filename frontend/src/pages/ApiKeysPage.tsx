@@ -22,7 +22,7 @@ const ApiKeysPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [keyName, setKeyName] = useState('');
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
-  const [copiedKey, setCopiedKey] = useState(false);
+  const [copiedKey, _setCopiedKey] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [revealedKeys, setRevealedKeys] = useState<RevealedKey[]>([]);
   const [revealingKeyId, setRevealingKeyId] = useState<string | null>(null);
@@ -155,7 +155,6 @@ const ApiKeysPage: React.FC = () => {
     setShowCreateModal(false);
     setNewApiKey(null);
     setKeyName('');
-    setError(null);
     setShowApiKey(false);
   };
 
@@ -225,7 +224,7 @@ const ApiKeysPage: React.FC = () => {
                 <div key={key.id} className="p-6 hover:bg-[#05F26C]/5 transition-colors">
                   <div className="flex items-center justify-between">
                     <div className="flex items-start space-x-4 flex-1">
-                      <div className="w-10 h-10 bg-[#05F26C] rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 bg-[#05F26C] rounded-lg flex items-center justify-center shrink-0">
                         <Key className="w-5 h-5 text-[#132426]" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -348,12 +347,6 @@ const ApiKeysPage: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleCreate} className="p-6 space-y-4">
-                {error && (
-                  <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                    <p className="text-sm text-red-400">{error}</p>
-                  </div>
-                )}
-
                 <div>
                   <label htmlFor="keyName" className="block text-sm font-medium text-white mb-2">
                     Nom de la clé
