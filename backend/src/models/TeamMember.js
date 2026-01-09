@@ -1,10 +1,10 @@
-import pool from '../config/database.js';
+import { query } from '../config/database.js';
 
 /**
  * Add a team member to an instance
  */
 export const addTeamMember = async (instanceId, userId, role, invitedBy) => {
-  const [result] = await pool.execute(
+  const result = await query(
     `INSERT INTO team_members (instance_id, user_id, role, invited_by, status)
      VALUES (?, ?, ?, ?, 'pending')`,
     [instanceId, userId, role, invitedBy]
@@ -16,7 +16,7 @@ export const addTeamMember = async (instanceId, userId, role, invitedBy) => {
  * Get all team members for an instance
  */
 export const getTeamMembers = async (instanceId) => {
-  const [rows] = await pool.execute(
+  const rows = await query(
     `SELECT 
       tm.id,
       tm.role,
@@ -41,7 +41,7 @@ export const getTeamMembers = async (instanceId) => {
  * Get user's role in an instance
  */
 export const getUserRole = async (instanceId, userId) => {
-  const [rows] = await pool.execute(
+  const rows = await query(
     `SELECT role FROM team_members 
      WHERE instance_id = ? AND user_id = ? AND status = 'active'`,
     [instanceId, userId]
@@ -53,7 +53,7 @@ export const getUserRole = async (instanceId, userId) => {
  * Check if user has access to instance
  */
 export const hasAccess = async (instanceId, userId) => {
-  const [rows] = await pool.execute(
+  const rows = await query(
     `SELECT COUNT(*) as count FROM team_members 
      WHERE instance_id = ? AND user_id = ? AND status = 'active'`,
     [instanceId, userId]
@@ -81,7 +81,7 @@ export const canManageTeam = async (instanceId, userId) => {
  * Update team member role
  */
 export const updateMemberRole = async (memberId, role) => {
-  await pool.execute(
+  await query(
     `UPDATE team_members SET role = ? WHERE id = ?`,
     [role, memberId]
   );
@@ -91,7 +91,7 @@ export const updateMemberRole = async (memberId, role) => {
  * Accept invitation
  */
 export const acceptInvitation = async (memberId) => {
-  await pool.execute(
+  await query(
     `UPDATE team_members SET status = 'active', joined_at = NOW() WHERE id = ?`,
     [memberId]
   );
@@ -101,7 +101,7 @@ export const acceptInvitation = async (memberId) => {
  * Decline invitation
  */
 export const declineInvitation = async (memberId) => {
-  await pool.execute(
+  await query(
     `UPDATE team_members SET status = 'declined' WHERE id = ?`,
     [memberId]
   );
@@ -111,7 +111,7 @@ export const declineInvitation = async (memberId) => {
  * Remove team member
  */
 export const removeMember = async (memberId) => {
-  await pool.execute(
+  await query(
     `DELETE FROM team_members WHERE id = ?`,
     [memberId]
   );
@@ -121,7 +121,7 @@ export const removeMember = async (memberId) => {
  * Get pending invitations for a user
  */
 export const getPendingInvitations = async (userId) => {
-  const [rows] = await pool.execute(
+  const rows = await query(
     `SELECT 
       tm.id,
       tm.role,
@@ -144,7 +144,7 @@ export const getPendingInvitations = async (userId) => {
  * Get instances where user is a team member
  */
 export const getUserInstances = async (userId) => {
-  const [rows] = await pool.execute(
+  const rows = await query(
     `SELECT 
       i.id,
       i.subdomain,
