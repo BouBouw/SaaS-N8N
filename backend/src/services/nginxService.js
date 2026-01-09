@@ -11,18 +11,20 @@ class NginxService {
   
   /**
    * Ajouter une configuration d'upstream pour une instance N8N
+   * @param {string} subdomain - Le sous-domaine de l'instance
+   * @param {string} containerName - Le nom du container Docker (ex: n8n-abc123)
    */
-  static async addN8NUpstream(subdomain, port) {
+  static async addN8NUpstream(subdomain, containerName) {
     // Vérifier si on est en environnement de développement (Windows)
     if (process.platform === 'win32') {
-      console.log(`⚠️ Mode développement - Skip Nginx config pour ${subdomain}:${port}`);
+      console.log(`⚠️ Mode développement - Skip Nginx config pour ${subdomain} -> ${containerName}`);
       return true;
     }
 
     const upstreamConfig = `
 # Instance ${subdomain}
 upstream n8n_${subdomain.replace(/[^a-zA-Z0-9]/g, '_')} {
-    server 127.0.0.1:${port};
+    server ${containerName}:5678;
 }
 
 server {
@@ -76,7 +78,7 @@ server {
       // Recharger Nginx
       await this.reloadNginx();
 
-      console.log(`✅ Nginx upstream configuré pour ${subdomain}:${port}`);
+      console.log(`✅ Nginx upstream configuré pour ${subdomain} -> ${containerName}:5678`);
       return true;
     } catch (error) {
       console.error('❌ Erreur lors de la configuration Nginx:', error);
