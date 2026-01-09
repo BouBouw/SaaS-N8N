@@ -22,7 +22,7 @@ class NginxService {
     const upstreamConfig = `
 # Instance ${subdomain}
 upstream n8n_${subdomain.replace(/[^a-zA-Z0-9]/g, '_')} {
-    server 127.0.0.1:${port};
+    server [::1]:${port};
 }
 
 server {
