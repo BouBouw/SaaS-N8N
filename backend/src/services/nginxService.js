@@ -26,8 +26,21 @@ upstream n8n_${subdomain.replace(/[^a-zA-Z0-9]/g, '_')} {
 }
 
 server {
-    listen 80;
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
     server_name ${subdomain}.${process.env.BASE_DOMAIN || 'boubouw.com'};
+
+    # SSL Configuration
+    ssl_certificate /etc/letsencrypt/live/${process.env.BASE_DOMAIN || 'boubouw.com'}-0001/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${process.env.BASE_DOMAIN || 'boubouw.com'}-0001/privkey.pem;
+    
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256';
+    ssl_prefer_server_ciphers off;
+
+    # Security Headers
+    add_header Strict-Transport-Security "max-age=31536000" always;
 
     location / {
         proxy_pass http://n8n_${subdomain.replace(/[^a-zA-Z0-9]/g, '_')};
@@ -119,13 +132,22 @@ server {
 
     try {
       // Tester la configuration avant de recharger
-      await execAsync('sudo nginx -t');
+      await execAsync('nginx -t');
       
-      // Recharger Nginx
-      await execAsync('sudo systemctl reload nginx');
+      // Recharger Nginx en envoyant un signal au processus de l'hôte
+      // Trouver le PID du process nginx master sur l'hôte
+      const { stdout } = await execAsync('pgrep -x nginx | head -1');
+      const nginxPid = stdout.trim();
       
-      console.log('✅ Nginx rechargé avec succès');
-      return true;
+      if (nginxPid) {
+        // Envoyer SIGHUP pour recharger la configuration
+        await execAsync(`kill -HUP ${nginxPid}`);
+        console.log('✅ Nginx rechargé avec succès');
+        return true;
+      } else {
+        console.error('❌ Impossible de trouver le processus Nginx');
+        return false;
+      }
     } catch (error) {
       console.error('❌ Erreur lors du rechargement de Nginx:', error.message);
       // Ne pas faire échouer l'opération si Nginx échoue
@@ -142,8 +164,8 @@ server {
     }
 
     try {
-      const { stdout } = await execAsync('sudo systemctl is-active nginx');
-      return stdout.trim() === 'active';
+      const { stdout } = await execAsync('pgrep -x nginx');
+      return stdout.trim().length > 0;
     } catch (error) {
       return false;
     }
