@@ -50,7 +50,7 @@ export const provisionInstance = async (userId, userEmail, progressCallback = nu
       Env: [
         `N8N_BASIC_AUTH_ACTIVE=false`,
         `N8N_HOST=${subdomain}.${config.domain.base}`,
-        `N8N_PORT=${port}`,
+        `N8N_PORT=5678`,
         `N8N_PROTOCOL=https`,
         `WEBHOOK_URL=https://${subdomain}.${config.domain.base}/`,
         `GENERIC_TIMEZONE=Europe/Paris`
