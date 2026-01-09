@@ -29,8 +29,8 @@ services:
       PORT: 3000
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_USER: saasuser
-      DB_PASSWORD: saaspassword
+      DB_USER: ${DB_USER:-saasuser}
+      DB_PASSWORD: ${DB_PASSWORD:-saaspassword}
       DB_NAME: ${DB_NAME:-saas_n8n}
       JWT_SECRET: ${JWT_SECRET:-your_jwt_secret_change_this}
       JWT_EXPIRES_IN: 7d
