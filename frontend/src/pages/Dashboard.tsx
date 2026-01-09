@@ -35,6 +35,7 @@ import { authService, User } from '../services/authService';
 import { instanceService, Instance } from '../services/instanceService';
 import { teamService, TeamMember } from '../services/teamService';
 import { getApiUrl } from '../config/api';
+import ProvisioningProgress from '../components/ProvisioningProgress';
 
 interface InstanceStats {
   status: string;
@@ -83,6 +84,7 @@ export default function Dashboard() {
   const [errors, setErrors] = useState<string[]>([]);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showProvisioning, setShowProvisioning] = useState(false);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -109,6 +111,13 @@ export default function Dashboard() {
       const instanceData = await instanceService.getMyInstance();
       setInstance(instanceData);
 
+      // If no instance found, show provisioning screen
+      if (!instanceData) {
+        setShowProvisioning(true);
+        setLoading(false);
+        return;
+      }
+
       if (instanceData?.status === 'running') {
         await loadStats();
         await loadHistory();
@@ -119,6 +128,7 @@ export default function Dashboard() {
       await loadTeamMembers();
     } catch (err) {
       console.error('Error loading data:', err);
+      setShowProvisioning(true);
     } finally {
       setLoading(false);
     }
@@ -262,15 +272,20 @@ export default function Dashboard() {
     setError('');
     try {
       await instanceService.deleteInstance();
-      // Recharger les données - l'instance devrait maintenant être null
-      await loadData();
-      // Rafraîchir la page pour refléter l'état
-      window.location.reload();
+      // Show provisioning screen again
+      setShowProvisioning(true);
+      setInstance(null);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to delete instance');
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleProvisioningComplete = async () => {
+    setShowProvisioning(false);
+    setLoading(true);
+    await loadData();
   };
 
   if (loading) {
@@ -279,6 +294,15 @@ export default function Dashboard() {
         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
+  }
+
+  // Show provisioning progress screen
+  if (showProvisioning) {
+    return <ProvisioningProgress onComplete={handleProvisioningComplete} />;
+  }
+
+  if (!instance) {
+    return null; // Should not happen
   }
 
   const isRunning = instance?.status === 'running';
@@ -372,41 +396,22 @@ export default function Dashboard() {
         </div>
       )}
 
-      {!instance ? (
-        <div className="mx-6 mt-6 bg-[#1a1f2e] border border-[#2d3748] rounded p-8 text-center">
-          <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Server className="w-8 h-8 text-white animate-pulse" />
-          </div>
-          <h2 className="text-xl font-semibold text-white mb-2">
-            Provisioning Instance...
-          </h2>
-          <p className="text-gray-400 mb-4">
-            Your N8N instance is being created. This usually takes 30-60 seconds.
-          </p>
-          <button
-            onClick={loadData}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-medium"
-          >
-            Refresh
-          </button>
-        </div>
-      ) : (
-        <>
-          {/* Tabs - Pterodactyl Style */}
-          <div className="bg-[#1a1f2e] border-b border-[#2d3748]">
-            <div className="px-6">
-              <div className="flex space-x-1">
-                <button
-                  onClick={() => setActiveTab('console')}
-                  className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
-                    activeTab === 'console'
-                      ? 'text-white border-blue-500'
-                      : 'text-gray-400 border-transparent hover:text-gray-300'
-                  }`}
-                >
-                  <Terminal className="w-4 h-4 inline mr-2" />
-                  Console
-                </button>
+      <>
+        {/* Tabs - Pterodactyl Style */}
+        <div className="bg-[#1a1f2e] border-b border-[#2d3748]">
+          <div className="px-6">
+            <div className="flex space-x-1">
+              <button
+                onClick={() => setActiveTab('console')}
+                className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+                  activeTab === 'console'
+                    ? 'text-white border-blue-500'
+                    : 'text-gray-400 border-transparent hover:text-gray-300'
+                }`}
+              >
+                <Terminal className="w-4 h-4 inline mr-2" />
+                Console
+              </button>
                 <button
                   onClick={() => setActiveTab('metrics')}
                   className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
@@ -418,52 +423,52 @@ export default function Dashboard() {
                   <Activity className="w-4 h-4 inline mr-2" />
                   Metrics
                 </button>
-                <button
-                  onClick={() => setActiveTab('errors')}
-                  className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
-                    activeTab === 'errors'
-                      ? 'text-white border-blue-500'
-                      : 'text-gray-400 border-transparent hover:text-gray-300'
-                  }`}
-                >
-                  <AlertTriangle className="w-4 h-4 inline mr-2" />
-                  Workflow Errors
-                  {errors.length > 0 && (
-                    <span className="ml-2 px-2 py-0.5 bg-red-600 text-white text-xs rounded-full">
-                      {errors.length}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab('team')}
-                  className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
-                    activeTab === 'team'
-                      ? 'text-white border-blue-500'
-                      : 'text-gray-400 border-transparent hover:text-gray-300'
-                  }`}
-                >
-                  <Users className="w-4 h-4 inline mr-2" />
-                  Team
-                  {teamMembers.length > 0 && (
-                    <span className="ml-2 px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
-                      {teamMembers.length}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab('settings')}
-                  className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
-                    activeTab === 'settings'
-                      ? 'text-white border-blue-500'
-                      : 'text-gray-400 border-transparent hover:text-gray-300'
-                  }`}
-                >
-                  <Settings className="w-4 h-4 inline mr-2" />
-                  Settings
-                </button>
-              </div>
-            </div>
+            <button
+              onClick={() => setActiveTab('errors')}
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+                activeTab === 'errors'
+                  ? 'text-white border-blue-500'
+                  : 'text-gray-400 border-transparent hover:text-gray-300'
+              }`}
+            >
+              <AlertTriangle className="w-4 h-4 inline mr-2" />
+              Workflow Errors
+              {errors.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-red-600 text-white text-xs rounded-full">
+                  {errors.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('team')}
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+                activeTab === 'team'
+                  ? 'text-white border-blue-500'
+                  : 'text-gray-400 border-transparent hover:text-gray-300'
+              }`}
+            >
+              <Users className="w-4 h-4 inline mr-2" />
+              Team
+              {teamMembers.length > 0 && (
+                <span className="ml-2 px-2 py-0.5 bg-blue-600 text-white text-xs rounded-full">
+                  {teamMembers.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+                activeTab === 'settings'
+                  ? 'text-white border-blue-500'
+                  : 'text-gray-400 border-transparent hover:text-gray-300'
+              }`}
+            >
+              <Settings className="w-4 h-4 inline mr-2" />
+              Settings
+            </button>
           </div>
+        </div>
+      </div>
 
           {/* Tab Content */}
           <div className="px-6 py-6">
@@ -999,7 +1004,6 @@ export default function Dashboard() {
             )}
           </div>
         </>
-      )}
     </div>
   );
 }

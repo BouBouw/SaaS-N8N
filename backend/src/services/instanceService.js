@@ -7,12 +7,14 @@ import NginxService from './nginxService.js';
 
 const docker = new Docker({ socketPath: config.docker.socketPath });
 
-export const provisionInstance = async (userId, userEmail) => {
+export const provisionInstance = async (userId, userEmail, progressCallback = null) => {
   try {
     console.log(`🚀 Provisioning N8N instance for user ${userId}`);
+    progressCallback?.(userId, 'info', 'Starting instance provisioning...', 10);
 
     // Generate unique subdomain
     const subdomain = generateSubdomain();
+    progressCallback?.(userId, 'info', 'Generated subdomain: ' + subdomain, 20);
     
     // Check if subdomain already exists
     const existingSubdomain = await Instance.findInstanceBySubdomain(subdomain);
@@ -28,6 +30,7 @@ export const provisionInstance = async (userId, userEmail) => {
 
     // Create volume for persistence
     const volumeName = `n8n-data-${subdomain}`;
+    progressCallback?.(userId, 'info', 'Creating data volume...', 30);
     
     try {
       await docker.createVolume({ Name: volumeName });
@@ -38,6 +41,7 @@ export const provisionInstance = async (userId, userEmail) => {
 
     // Get resource limits based on plan (default: starter)
     const resourceLimits = getDockerLimits(DEFAULT_PLAN);
+    progressCallback?.(userId, 'info', 'Configuring resource limits...', 40);
     
     // Container configuration with resource limits
     const containerConfig = {
@@ -71,6 +75,7 @@ export const provisionInstance = async (userId, userEmail) => {
     };
 
     // Pull N8N image if not exists
+    progressCallback?.(userId, 'info', 'Pulling N8N Docker image...', 50);
     try {
       console.log('📥 Pulling N8N image...');
       await new Promise((resolve, reject) => {
@@ -86,11 +91,14 @@ export const provisionInstance = async (userId, userEmail) => {
     } catch (error) {
       console.log('Image may already exist, continuing...');
     }
+    progressCallback?.(userId, 'info', 'Image ready', 60);
 
     // Create and start container
     console.log('📦 Creating container...');
+    progressCallback?.(userId, 'info', 'Creating Docker container...', 70);
     const container = await docker.createContainer(containerConfig);
     
+    progressCallback?.(userId, 'info', 'Starting container...', 80);
     await container.start();
     console.log(`✅ Container started: ${containerName}`);
 
@@ -99,6 +107,7 @@ export const provisionInstance = async (userId, userEmail) => {
     const containerId = containerInfo.Id;
 
     // Save instance to database
+    progressCallback?.(userId, 'info', 'Saving instance configuration...', 85);
     const instanceId = await Instance.createInstance(
       userId,
       subdomain,
@@ -108,9 +117,11 @@ export const provisionInstance = async (userId, userEmail) => {
     );
 
     // Configure Nginx for this instance
+    progressCallback?.(userId, 'info', 'Configuring HTTPS and domain...', 90);
     await NginxService.addN8NUpstream(subdomain, port);
 
     console.log(`✅ Instance provisioned successfully for user ${userId}`);
+    progressCallback?.(userId, 'success', 'Instance ready! Redirecting...', 100);
 
     return {
       id: instanceId,
@@ -123,6 +134,7 @@ export const provisionInstance = async (userId, userEmail) => {
     };
   } catch (error) {
     console.error('Error provisioning instance:', error);
+    progressCallback?.(userId, 'error', 'Failed: ' + error.message, 0);
     throw error;
   }
 };

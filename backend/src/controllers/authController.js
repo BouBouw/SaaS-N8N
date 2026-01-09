@@ -1,5 +1,6 @@
 import * as authService from '../services/authService.js';
 import * as instanceService from '../services/instanceService.js';
+import { sendProvisioningUpdate } from './instanceController.js';
 
 export const register = async (req, res) => {
   try {
@@ -8,10 +9,11 @@ export const register = async (req, res) => {
     // Register user
     const result = await authService.register(email, password, name);
     
-    // Provision N8N instance (async - don't wait)
-    instanceService.provisionInstance(result.user.id, email)
+    // Provision N8N instance (async - don't wait) with progress callback
+    instanceService.provisionInstance(result.user.id, email, sendProvisioningUpdate)
       .catch(error => {
         console.error('Error provisioning N8N instance:', error);
+        sendProvisioningUpdate(result.user.id, 'error', error.message, 0);
       });
 
     res.status(201).json({

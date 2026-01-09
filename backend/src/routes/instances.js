@@ -4,7 +4,10 @@ import { verifyJWT } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// All routes are protected
+// SSE endpoint - must be before verifyJWT middleware
+router.get('/provision/progress', instanceController.getProvisioningProgress);
+
+// All other routes are protected
 router.use(verifyJWT);
 
 router.get('/my', instanceController.getMyInstance);
