@@ -78,6 +78,51 @@ export const getMyInstance = async (req, res) => {
   }
 };
 
+export const createInstance = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const userEmail = req.user.email;
+    
+    // Check if instance already exists
+    const existingInstance = await instanceService.getInstanceStatus(userId);
+    if (existingInstance) {
+      return res.status(400).json({
+        success: false,
+        error: 'Instance already exists'
+      });
+    }
+    
+    // Get Socket.IO instance
+    const io = req.app.get('io');
+    
+    // Provision a new N8N instance (async - don't wait) with WebSocket callback
+    const progressCallback = (userId, type, message, progress) => {
+      io.emit(`provisioning:${userId}`, { type, message, progress });
+    };
+    
+    instanceService.provisionInstance(userId, userEmail, progressCallback)
+      .catch(error => {
+        console.error('Error provisioning N8N instance:', error);
+        io.emit(`provisioning:${userId}`, { 
+          type: 'error', 
+          message: error.message, 
+          progress: 0 
+        });
+      });
+    
+    res.json({
+      success: true,
+      message: 'Instance provisioning started'
+    });
+  } catch (error) {
+    console.error('Error creating instance:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
+
 export const startInstance = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -138,12 +183,33 @@ export const restartInstance = async (req, res) => {
 export const deleteInstance = async (req, res) => {
   try {
     const userId = req.user.id;
+    const userEmail = req.user.email;
     
+    // Delete the instance
     const result = await instanceService.deleteInstance(userId);
+    
+    // Get Socket.IO instance
+    const io = req.app.get('io');
+    
+    // Provision a new N8N instance automatically (async - don't wait) with WebSocket callback
+    const progressCallback = (userId, type, message, progress) => {
+      io.emit(`provisioning:${userId}`, { type, message, progress });
+    };
+    
+    instanceService.provisionInstance(userId, userEmail, progressCallback)
+      .catch(error => {
+        console.error('Error provisioning new N8N instance after deletion:', error);
+        io.emit(`provisioning:${userId}`, { 
+          type: 'error', 
+          message: error.message, 
+          progress: 0 
+        });
+      });
     
     res.json({
       success: true,
-      data: result
+      data: result,
+      message: 'Instance deleted successfully. A new instance is being provisioned.'
     });
   } catch (error) {
     console.error('Error deleting instance:', error);
@@ -156,6 +222,7 @@ export const deleteInstance = async (req, res) => {
 
 export default {
   getMyInstance,
+  createInstance,
   startInstance,
   stopInstance,
   restartInstance,

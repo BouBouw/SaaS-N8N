@@ -1,4 +1,6 @@
 import express from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -8,6 +10,16 @@ import { createPool } from './config/database.js';
 import routes from './routes/index.js';
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+// Make io accessible to routes
+app.set('io', io);
 
 // Trust proxy for Nginx reverse proxy
 app.set('trust proxy', 1);
@@ -53,8 +65,17 @@ const startServer = async () => {
     createPool();
     console.log('✅ Database connection established');
 
+    // Socket.IO connection handling
+    io.on('connection', (socket) => {
+      console.log(`✅ Client connected: ${socket.id}`);
+      
+      socket.on('disconnect', () => {
+        console.log(`❌ Client disconnected: ${socket.id}`);
+      });
+    });
+
     // Start server
-    app.listen(config.port, () => {
+    httpServer.listen(config.port, () => {
       console.log(`🚀 Server running on port ${config.port}`);
       console.log(`📝 Environment: ${config.nodeEnv}`);
       console.log(`🌐 Domain: ${config.domain.base}`);

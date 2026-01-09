@@ -13,5 +13,6 @@ router.post('/login', validateRequest(loginSchema), authController.login);
 router.get('/me', verifyJWT, authController.me);
 router.put('/profile', verifyJWT, authController.updateProfile);
 router.put('/password', verifyJWT, authController.updatePassword);
+router.delete('/account', verifyJWT, authController.deleteAccount);
 
 export default router;

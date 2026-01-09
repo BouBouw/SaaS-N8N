@@ -2,6 +2,9 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import config from '../config/index.js';
 import * as User from '../models/User.js';
+import * as Instance from '../models/Instance.js';
+import * as ApiKey from '../models/ApiKey.js';
+import { deleteInstance } from './instanceService.js';
 
 export const register = async (email, password, name) => {
   // Check if user already exists
@@ -132,6 +135,44 @@ export const updatePassword = async (userId, currentPassword, newPassword) => {
   await User.updateUser(userId, { password: hashedPassword });
 };
 
+export const deleteAccount = async (userId, password) => {
+  // Get user
+  const user = await User.findUserById(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // Verify password
+  const isValidPassword = await bcrypt.compare(password, user.password);
+  if (!isValidPassword) {
+    throw new Error('Password is incorrect');
+  }
+
+  console.log(`🗑️ Deleting account for user ${userId}`);
+
+  // 1. Delete all user instances (containers, volumes, nginx configs)
+  try {
+    await deleteInstance(userId);
+    console.log('✅ Instance deleted');
+  } catch (error) {
+    console.log('⚠️ No instance to delete or error:', error.message);
+  }
+
+  // 2. Delete all API keys
+  try {
+    await ApiKey.deleteApiKeysByUserId(userId);
+    console.log('✅ API keys deleted');
+  } catch (error) {
+    console.log('⚠️ Error deleting API keys:', error.message);
+  }
+
+  // 3. Delete user (will cascade delete team_members, workflow_comments via foreign keys)
+  await User.deleteUser(userId);
+  console.log('✅ User account deleted');
+
+  return { success: true };
+};
+
 export default {
   register,
   login,
@@ -139,5 +180,6 @@ export default {
   generateToken,
   getUserById,
   updateProfile,
-  updatePassword
+  updatePassword,
+  deleteAccount
 };

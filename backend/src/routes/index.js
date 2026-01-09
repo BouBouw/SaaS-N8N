@@ -9,6 +9,9 @@ import statsRoutes from './stats.js';
 import logsRoutes from './logs.js';
 import teamRoutes from './team.js';
 import commentsRoutes from './comments.js';
+import aiRoutes from './ai.js';
+import publicWorkflowsRoutes from './publicWorkflows.js';
+import favoritesRoutes from './favorites.js';
 
 const router = express.Router();
 
@@ -22,6 +25,9 @@ router.use('/stats', statsRoutes);
 router.use('/logs', logsRoutes);
 router.use('/team', teamRoutes);
 router.use('/comments', commentsRoutes);
+router.use('/ai', aiRoutes);
+router.use('/public-workflows', publicWorkflowsRoutes);
+router.use('/favorites', favoritesRoutes);
 
 // Health check
 router.get('/health', (req, res) => {

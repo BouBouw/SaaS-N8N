@@ -18,7 +18,7 @@ export const getConnection = async () => {
   return await pool.getConnection();
 };
 
-export const query = async (sql, params) => {
+export const query = async (sql, params = []) => {
   if (!pool) {
     createPool();
   }

@@ -56,11 +56,17 @@ export const deleteApiKey = async (id, userId) => {
   await query(sql, [id, userId]);
 };
 
+export const deleteApiKeysByUserId = async (userId) => {
+  const sql = 'DELETE FROM api_keys WHERE user_id = ?';
+  await query(sql, [userId]);
+};
+
 export default {
   createApiKey,
   findApiKeyByUserId,
   findApiKeyById,
   revealApiKey,
   findUserByApiKey,
-  deleteApiKey
+  deleteApiKey,
+  deleteApiKeysByUserId
 };

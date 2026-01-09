@@ -11,6 +11,7 @@ router.get('/provision/progress', instanceController.getProvisioningProgress);
 router.use(verifyJWT);
 
 router.get('/my', instanceController.getMyInstance);
+router.post('/create', instanceController.createInstance);
 router.post('/start', instanceController.startInstance);
 router.post('/stop', instanceController.stopInstance);
 router.post('/restart', instanceController.restartInstance);

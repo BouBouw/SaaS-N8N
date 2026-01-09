@@ -38,6 +38,10 @@ export const instanceService = {
     await api.delete('/instances/delete');
   },
 
+  async createInstance(): Promise<void> {
+    await api.post('/instances/create');
+  },
+
   async getLogs(tail: number = 500): Promise<string[]> {
     const response = await api.get(`/logs/logs?tail=${tail}`);
     return response.data.data;

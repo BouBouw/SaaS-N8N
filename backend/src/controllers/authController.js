@@ -9,11 +9,22 @@ export const register = async (req, res) => {
     // Register user
     const result = await authService.register(email, password, name);
     
-    // Provision N8N instance (async - don't wait) with progress callback
-    instanceService.provisionInstance(result.user.id, email, sendProvisioningUpdate)
+    // Get Socket.IO instance
+    const io = req.app.get('io');
+    
+    // Provision N8N instance (async - don't wait) with WebSocket callback
+    const progressCallback = (userId, type, message, progress) => {
+      io.emit(`provisioning:${userId}`, { type, message, progress });
+    };
+    
+    instanceService.provisionInstance(result.user.id, email, progressCallback)
       .catch(error => {
         console.error('Error provisioning N8N instance:', error);
-        sendProvisioningUpdate(result.user.id, 'error', error.message, 0);
+        io.emit(`provisioning:${result.user.id}`, { 
+          type: 'error', 
+          message: error.message, 
+          progress: 0 
+        });
       });
 
     res.status(201).json({
@@ -112,10 +123,31 @@ export const updatePassword = async (req, res) => {
   }
 };
 
+export const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { password } = req.body;
+
+    await authService.deleteAccount(userId, password);
+    
+    res.json({
+      success: true,
+      message: 'Account deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(400).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+};
+
 export default {
   register,
   login,
   me,
   updateProfile,
-  updatePassword
+  updatePassword,
+  deleteAccount
 };

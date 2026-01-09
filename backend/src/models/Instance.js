@@ -1,13 +1,13 @@
 import { query } from '../config/database.js';
 import { v4 as uuidv4 } from 'uuid';
 
-export const createInstance = async (userId, subdomain, containerId, containerName, port) => {
+export const createInstance = async (userId, subdomain, containerId, containerName, port, n8nUsername, n8nPassword) => {
   const id = uuidv4();
   const sql = `
-    INSERT INTO instances (id, user_id, subdomain, container_id, container_name, port, status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, 'running', NOW(), NOW())
+    INSERT INTO instances (id, user_id, subdomain, container_id, container_name, port, n8n_username, n8n_password, status, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'running', NOW(), NOW())
   `;
-  await query(sql, [id, userId, subdomain, containerId, containerName, port]);
+  await query(sql, [id, userId, subdomain, containerId, containerName, port, n8nUsername, n8nPassword]);
   return id;
 };
 

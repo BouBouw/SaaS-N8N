@@ -4,6 +4,7 @@ import * as Instance from '../models/Instance.js';
 import { generateSubdomain } from '../utils/helpers.js';
 import { getDockerLimits, DEFAULT_PLAN } from '../config/plans.js';
 import NginxService from './nginxService.js';
+import crypto from 'crypto';
 
 const docker = new Docker({ socketPath: config.docker.socketPath });
 
@@ -40,15 +41,22 @@ export const provisionInstance = async (userId, userEmail, progressCallback = nu
     }
 
     // Get resource limits based on plan (default: starter)
-    const resourceLimits = getDockerLimits(DEFAULT_PLAN);
+    // Disable resource limits in development (NODE_ENV !== 'production' on VPS)
+    const resourceLimits = config.nodeEnv === 'development' ? {} : getDockerLimits(DEFAULT_PLAN);
     progressCallback?.(userId, 'info', 'Configuring resource limits...', 40);
+    
+    // Generate N8N basic auth credentials for API access
+    const n8nUsername = 'admin';
+    const n8nPassword = crypto.randomBytes(16).toString('hex');
     
     // Container configuration with resource limits
     const containerConfig = {
       Image: 'n8nio/n8n:latest',
       name: containerName,
       Env: [
-        `N8N_BASIC_AUTH_ACTIVE=false`,
+        `N8N_BASIC_AUTH_ACTIVE=true`,
+        `N8N_BASIC_AUTH_USER=${n8nUsername}`,
+        `N8N_BASIC_AUTH_PASSWORD=${n8nPassword}`,
         `N8N_HOST=${subdomain}.${config.domain.base}`,
         `N8N_PORT=5678`,
         `N8N_PROTOCOL=https`,
@@ -113,7 +121,9 @@ export const provisionInstance = async (userId, userEmail, progressCallback = nu
       subdomain,
       containerId,
       containerName,
-      port
+      port,
+      n8nUsername,
+      n8nPassword
     );
 
     // Configure Nginx for this instance
