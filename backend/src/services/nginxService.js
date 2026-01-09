@@ -131,13 +131,9 @@ server {
     }
 
     try {
-      // Tester la configuration avant de recharger
-      await execAsync('nginx -t');
-      
-      // Recharger Nginx directement avec la commande reload
-      await execAsync('nginx -s reload');
-      
-      console.log('✅ Nginx rechargé avec succès');
+      // Créer un flag file qui sera détecté par le cron
+      await fs.writeFile('/var/www/scripts/.reload-nginx', '');
+      console.log('✅ Nginx reload scheduled');
       return true;
     } catch (error) {
       console.error('❌ Erreur lors du rechargement de Nginx:', error.message);
