@@ -9,6 +9,9 @@ import routes from './routes/index.js';
 
 const app = express();
 
+// Trust proxy for Nginx reverse proxy
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet());
 app.use(cors());
