@@ -134,20 +134,11 @@ server {
       // Tester la configuration avant de recharger
       await execAsync('nginx -t');
       
-      // Recharger Nginx en envoyant un signal au processus de l'hôte
-      // Trouver le PID du process nginx master sur l'hôte
-      const { stdout } = await execAsync('pgrep -x nginx | head -1');
-      const nginxPid = stdout.trim();
+      // Recharger Nginx directement avec la commande reload
+      await execAsync('nginx -s reload');
       
-      if (nginxPid) {
-        // Envoyer SIGHUP pour recharger la configuration
-        await execAsync(`kill -HUP ${nginxPid}`);
-        console.log('✅ Nginx rechargé avec succès');
-        return true;
-      } else {
-        console.error('❌ Impossible de trouver le processus Nginx');
-        return false;
-      }
+      console.log('✅ Nginx rechargé avec succès');
+      return true;
     } catch (error) {
       console.error('❌ Erreur lors du rechargement de Nginx:', error.message);
       // Ne pas faire échouer l'opération si Nginx échoue
@@ -164,8 +155,8 @@ server {
     }
 
     try {
-      const { stdout } = await execAsync('pgrep -x nginx');
-      return stdout.trim().length > 0;
+      await execAsync('nginx -t');
+      return true;
     } catch (error) {
       return false;
     }

@@ -253,6 +253,26 @@ export default function Dashboard() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this instance? This action cannot be undone and will delete all your workflows and data.')) {
+      return;
+    }
+    
+    setActionLoading(true);
+    setError('');
+    try {
+      await instanceService.deleteInstance();
+      // Recharger les données - l'instance devrait maintenant être null
+      await loadData();
+      // Rafraîchir la page pour refléter l'état
+      window.location.reload();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to delete instance');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -288,6 +308,15 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center space-x-2">
+            <button
+              onClick={handleDelete}
+              disabled={actionLoading}
+              className="px-4 py-2 bg-red-900/50 hover:bg-red-900 text-red-400 hover:text-red-300 border border-red-800 rounded text-sm font-medium transition-colors disabled:opacity-50 flex items-center space-x-2"
+              title="Delete Instance"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete</span>
+            </button>
             {isRunning && (
               <button
                 onClick={handleRestart}
