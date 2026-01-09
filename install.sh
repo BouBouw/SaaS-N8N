@@ -211,8 +211,17 @@ EOF
 ln -sf /etc/nginx/sites-available/n8n-saas-main /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 
-# Tester et recharger
-nginx -t && systemctl reload nginx
+# Tester la configuration
+nginx -t
+
+# Démarrer Nginx si non actif
+if ! systemctl is-active --quiet nginx; then
+    echo "   Démarrage de Nginx..."
+    systemctl start nginx
+fi
+
+# Recharger Nginx
+systemctl reload nginx
 echo "✅ Configuration Nginx créée"
 
 # 12. Créer le fichier .env
