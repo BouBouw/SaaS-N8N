@@ -15,11 +15,15 @@ class NginxService {
    * @param {number} port - Le port exposé sur 127.0.0.1
    */
   static async addN8NUpstream(subdomain, port) {
+    console.log(`🔧 [NginxService] addN8NUpstream appelé pour ${subdomain}:${port}`);
+    
     // Vérifier si on est en environnement de développement (Windows)
     if (process.platform === 'win32') {
       console.log(`⚠️ Mode développement - Skip Nginx config pour ${subdomain}:${port}`);
       return true;
     }
+
+    console.log(`📝 [NginxService] Génération de la configuration Nginx...`);
 
     const upstreamConfig = `
 # Instance ${subdomain}
@@ -70,26 +74,33 @@ server {
 
     try {
       const configPath = `/etc/nginx/sites-available/n8n-${subdomain}`;
+      console.log(`📁 [NginxService] Écriture du fichier ${configPath}...`);
       
       // Écrire la configuration
       await fs.writeFile(configPath, upstreamConfig, 'utf8');
+      console.log(`✅ [NginxService] Fichier écrit avec succès`);
 
       // Créer le lien symbolique
       const linkPath = `/etc/nginx/sites-enabled/n8n-${subdomain}`;
+      console.log(`🔗 [NginxService] Création du lien symbolique ${linkPath}...`);
       try {
         await fs.access(linkPath);
+        console.log(`⚠️ [NginxService] Le lien symbolique existe déjà`);
         // Le lien existe déjà
       } catch {
         await fs.symlink(configPath, linkPath);
+        console.log(`✅ [NginxService] Lien symbolique créé`);
       }
 
       // Recharger Nginx
+      console.log(`🔄 [NginxService] Rechargement de Nginx...`);
       await this.reloadNginx();
 
       console.log(`✅ Nginx upstream configuré pour ${subdomain}:${port}`);
       return true;
     } catch (error) {
-      console.error('❌ Erreur lors de la configuration Nginx:', error);
+      console.error(`❌ [NginxService] Erreur lors de la configuration Nginx pour ${subdomain}:`, error);
+      console.error(`❌ [NginxService] Stack trace:`, error.stack);
       // Ne pas faire échouer le provisioning si Nginx échoue
       return false;
     }
