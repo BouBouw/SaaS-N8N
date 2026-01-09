@@ -124,7 +124,7 @@ export const provisionInstance = async (userId, userEmail, progressCallback = nu
       port,
       n8nUsername,
       n8nPassword
-    );port);
+    );
 
     console.log(`✅ Instance provisioned successfully for user ${userId}`);
     progressCallback?.(userId, 'success', 'Instance ready! Redirecting...', 100);
