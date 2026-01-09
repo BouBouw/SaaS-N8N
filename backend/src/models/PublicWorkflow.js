@@ -1,12 +1,14 @@
 import { query } from '../config/database.js';
+import { v4 as uuidv4 } from 'uuid';
 
 export const create = async (userId, name, description, workflow) => {
+  const id = uuidv4();
   const result = await query(
-    `INSERT INTO public_workflows (user_id, name, description, workflow_json, created_at) 
-     VALUES (?, ?, ?, ?, NOW())`,
-    [userId, name, description, JSON.stringify(workflow)]
+    `INSERT INTO public_workflows (id, user_id, name, description, workflow_json, created_at) 
+     VALUES (?, ?, ?, ?, ?, NOW())`,
+    [id, userId, name, description, JSON.stringify(workflow)]
   );
-  return result.insertId;
+  return id;
 };
 
 export const findAll = async (limit = 50, offset = 0, userId = null) => {
