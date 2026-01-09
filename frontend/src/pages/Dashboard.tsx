@@ -308,15 +308,17 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center space-x-2">
-            <button
-              onClick={handleDelete}
-              disabled={actionLoading}
-              className="px-4 py-2 bg-red-900/50 hover:bg-red-900 text-red-400 hover:text-red-300 border border-red-800 rounded text-sm font-medium transition-colors disabled:opacity-50 flex items-center space-x-2"
-              title="Delete Instance"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span>Delete</span>
-            </button>
+            {instance && (
+              <button
+                onClick={handleDelete}
+                disabled={actionLoading}
+                className="px-4 py-2 bg-red-900/50 hover:bg-red-900 text-red-400 hover:text-red-300 border border-red-800 rounded text-sm font-medium transition-colors disabled:opacity-50 flex items-center space-x-2"
+                title="Delete Instance"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete</span>
+              </button>
+            )}
             {isRunning && (
               <button
                 onClick={handleRestart}
