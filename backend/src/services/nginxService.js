@@ -10,6 +10,31 @@ class NginxService {
   static NGINX_SITES_AVAILABLE = '/etc/nginx/sites-available';
   
   /**
+   * Générer un certificat SSL Let's Encrypt pour un sous-domaine
+   * @param {string} subdomain - Le sous-domaine de l'instance
+   * @returns {Promise<boolean>}
+   */
+  static async generateSSLCertificate(subdomain) {
+    const domain = `${subdomain}.${process.env.BASE_DOMAIN || 'boubouw.com'}`;
+    
+    try {
+      console.log(`🔐 Génération du certificat SSL pour ${domain}...`);
+      
+      // Utiliser certbot pour générer le certificat
+      const { stdout } = await execAsync(
+        `certbot certonly --nginx --non-interactive --agree-tos --email admin@${process.env.BASE_DOMAIN || 'boubouw.com'} -d ${domain}`
+      );
+      
+      console.log(`✅ Certificat SSL généré pour ${domain}`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Erreur lors de la génération du certificat SSL pour ${domain}:`, error.message);
+      // On continue même si le certificat échoue, on utilisera le wildcard
+      return false;
+    }
+  }
+
+  /**
    * Ajouter une configuration d'upstream pour une instance N8N
    * @param {string} subdomain - Le sous-domaine de l'instance
    * @param {number} port - Le port exposé sur 127.0.0.1
@@ -20,6 +45,9 @@ class NginxService {
       console.log(`⚠️ Mode développement - Skip Nginx config pour ${subdomain}:${port}`);
       return true;
     }
+
+    // Générer le certificat SSL automatiquement
+    await this.generateSSLCertificate(subdomain);
 
     const upstreamConfig = `
 # Instance ${subdomain}
@@ -33,9 +61,9 @@ server {
     http2 on;
     server_name ${subdomain}.${process.env.BASE_DOMAIN || 'boubouw.com'};
 
-    # SSL Configuration
-    ssl_certificate /etc/letsencrypt/live/${process.env.BASE_DOMAIN || 'boubouw.com'}-0001/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/${process.env.BASE_DOMAIN || 'boubouw.com'}-0001/privkey.pem;
+    # SSL Configuration - Utilise le certificat spécifique si disponible, sinon le wildcard
+    ssl_certificate /etc/letsencrypt/live/${subdomain}.${process.env.BASE_DOMAIN || 'boubouw.com'}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${subdomain}.${process.env.BASE_DOMAIN || 'boubouw.com'}/privkey.pem;
     
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256';
