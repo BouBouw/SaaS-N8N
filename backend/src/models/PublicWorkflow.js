@@ -72,10 +72,18 @@ export const findById = async (id) => {
 };
 
 export const incrementDownloads = async (id) => {
-  await query(
-    'UPDATE public_workflows SET downloads = downloads + 1 WHERE id = ?',
-    [id]
-  );
+  try {
+    await query(
+      'UPDATE public_workflows SET downloads = downloads + 1 WHERE id = ?',
+      [id]
+    );
+  } catch (error) {
+    // Ignore if downloads column doesn't exist yet
+    if (error.code !== 'ER_BAD_FIELD_ERROR') {
+      throw error;
+    }
+    console.log('⚠️ downloads column not found - skipping increment');
+  }
 };
 
 export const deleteWorkflow = async (id, userId) => {

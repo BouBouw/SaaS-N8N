@@ -1,6 +1,17 @@
 import crypto from 'crypto';
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your-32-character-secret-key!!'; // Must be 32 chars
+// Ensure ENCRYPTION_KEY is exactly 32 bytes for AES-256
+const getEncryptionKey = () => {
+  const key = process.env.ENCRYPTION_KEY || 'your-32-character-secret-key!!';
+  if (key.length < 32) {
+    // Pad with zeros if too short
+    return key.padEnd(32, '0');
+  }
+  // Truncate if too long
+  return key.slice(0, 32);
+};
+
+const ENCRYPTION_KEY = getEncryptionKey();
 const ALGORITHM = 'aes-256-cbc';
 
 export const generateApiKey = () => {
@@ -17,7 +28,7 @@ export const verifyApiKey = (apiKey, hashedKey) => {
 
 export const encryptApiKey = (apiKey) => {
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY.slice(0, 32)), iv);
+  const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
   let encrypted = cipher.update(apiKey, 'utf8', 'hex');
   encrypted += cipher.final('hex');
   return iv.toString('hex') + ':' + encrypted;
@@ -27,7 +38,7 @@ export const decryptApiKey = (encryptedKey) => {
   const parts = encryptedKey.split(':');
   const iv = Buffer.from(parts[0], 'hex');
   const encryptedText = parts[1];
-  const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY.slice(0, 32)), iv);
+  const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY), iv);
   let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
   return decrypted;

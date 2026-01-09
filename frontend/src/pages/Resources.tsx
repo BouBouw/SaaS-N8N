@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { FolderOpen, FileText, Upload, User, Calendar, TrendingUp, X, Code, Trash2, Heart } from 'lucide-react';
 import { authService } from '../services/authService';
 import { API_URL } from '../config/api';
+import { useToast } from '../contexts/ToastContext';
 
 interface PublicWorkflow {
   id: number;
@@ -24,6 +25,7 @@ export default function Resources() {
   const [favoritingId, setFavoritingId] = useState<number | null>(null);
   const [selectedWorkflow, setSelectedWorkflow] = useState<PublicWorkflow | null>(null);
   const currentUser = authService.getCurrentUser();
+  const { showToast, showDemand } = useToast();
 
   useEffect(() => {
     fetchPublicWorkflows();
@@ -55,47 +57,59 @@ export default function Resources() {
       });
 
       if (response.ok) {
-        alert('✅ Workflow importé avec succès dans votre instance N8N!');
+        const data = await response.json();
+        showToast('success', 'Workflow importé avec succès dans votre instance N8N!');
         fetchPublicWorkflows();
         setSelectedWorkflow(null);
+        
+        // Open N8N editor if URL is provided
+        if (data.data?.editorUrl) {
+          setTimeout(() => {
+            window.open(data.data.editorUrl, '_blank');
+          }, 1000);
+        }
       } else {
-        alert('❌ Erreur lors de l\'import du workflow');
+        const errorData = await response.json();
+        console.error('Import error:', errorData);
+        const errorMessage = errorData.message || 'Erreur lors de l\'import du workflow';
+        showToast('error', errorMessage);
       }
     } catch (error) {
       console.error('Error using workflow:', error);
-      alert('❌ Erreur lors de l\'import du workflow');
+      showToast('error', 'Erreur lors de l\'import du workflow - vérifiez que votre instance N8N est active');
     } finally {
       setImporting(null);
     }
   };
 
   const handleDeleteWorkflow = async (workflowId: number) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce workflow ?')) {
-      return;
-    }
+    showDemand(
+      'Êtes-vous sûr de vouloir supprimer ce workflow ?',
+      async () => {
+        setDeleting(workflowId);
+        try {
+          const response = await fetch(`${API_URL}/api/public-workflows/${workflowId}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${authService.getToken()}`
+            }
+          });
 
-    setDeleting(workflowId);
-    try {
-      const response = await fetch(`${API_URL}/api/public-workflows/${workflowId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${authService.getToken()}`
+          if (response.ok) {
+            showToast('success', 'Workflow supprimé avec succès!');
+            fetchPublicWorkflows();
+            setSelectedWorkflow(null);
+          } else {
+            showToast('error', 'Erreur lors de la suppression du workflow');
+          }
+        } catch (error) {
+          console.error('Error deleting workflow:', error);
+          showToast('error', 'Erreur lors de la suppression du workflow');
+        } finally {
+          setDeleting(null);
         }
-      });
-
-      if (response.ok) {
-        alert('✅ Workflow supprimé avec succès!');
-        fetchPublicWorkflows();
-        setSelectedWorkflow(null);
-      } else {
-        alert('❌ Erreur lors de la suppression du workflow');
       }
-    } catch (error) {
-      console.error('Error deleting workflow:', error);
-      alert('❌ Erreur lors de la suppression du workflow');
-    } finally {
-      setDeleting(null);
-    }
+    );
   };
 
   const handleToggleFavorite = async (workflowId: number, e?: React.MouseEvent) => {

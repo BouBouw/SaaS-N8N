@@ -97,12 +97,12 @@ export const usePublicWorkflow = async (req, res) => {
       });
     }
 
+    // Increment download counter first (before sending response)
+    await PublicWorkflow.incrementDownloads(id);
+    
     // Import the workflow to user's instance
     req.body.workflow = workflow.workflow_json;
     await importToN8N(req, res);
-
-    // Increment download counter
-    await PublicWorkflow.incrementDownloads(id);
 
   } catch (error) {
     console.error('Error using public workflow:', error);
