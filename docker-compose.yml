@@ -44,6 +44,7 @@ services:
       - n8n_volumes:/app/volumes
       - /etc/nginx/sites-available:/etc/nginx/sites-available
       - /etc/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - /run/nginx:/run/nginx:ro
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
