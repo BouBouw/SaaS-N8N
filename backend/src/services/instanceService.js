@@ -114,6 +114,10 @@ export const provisionInstance = async (userId, userEmail, progressCallback = nu
     const containerInfo = await container.inspect();
     const containerId = containerInfo.Id;
 
+    // Configure Nginx for this instance
+    progressCallback?.(userId, 'info', 'Configuring reverse proxy...', 80);
+    await NginxService.addN8NUpstream(subdomain, port);
+
     // Save instance to database
     progressCallback?.(userId, 'info', 'Saving instance configuration...', 85);
     const instanceId = await Instance.createInstance(
