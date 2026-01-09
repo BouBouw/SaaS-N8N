@@ -23,8 +23,8 @@ export const provisionInstance = async (userId, userEmail, progressCallback = nu
       throw new Error('Subdomain collision, please retry');
     }
 
-    // Get next available port
-    const port = await Instance.getNextAvailablePort();
+    // Port is 5678 internally (not exposed to host)
+    const port = 5678;
 
     // Create container name
     const containerName = `n8n-${subdomain}`;
@@ -67,19 +67,15 @@ export const provisionInstance = async (userId, userEmail, progressCallback = nu
         Binds: [
           `${volumeName}:/home/node/.n8n`
         ],
-        PortBindings: {
-          '5678/tcp': [{ HostPort: port.toString() }]
-        },
+        // No PortBindings - containers are only accessible via Docker network
         RestartPolicy: {
           Name: 'unless-stopped'
         },
         NetworkMode: config.docker.network,
         // Resource limits from plan
         ...resourceLimits
-      },
-      ExposedPorts: {
-        '5678/tcp': {}
       }
+      // No ExposedPorts needed - internal only
     };
 
     // Pull N8N image if not exists
@@ -128,7 +124,7 @@ export const provisionInstance = async (userId, userEmail, progressCallback = nu
 
     // Configure Nginx for this instance
     progressCallback?.(userId, 'info', 'Configuring HTTPS and domain...', 90);
-    await NginxService.addN8NUpstream(subdomain, port);
+    await NginxService.addN8NUpstream(subdomain, containerName);
 
     console.log(`✅ Instance provisioned successfully for user ${userId}`);
     progressCallback?.(userId, 'success', 'Instance ready! Redirecting...', 100);
@@ -137,7 +133,7 @@ export const provisionInstance = async (userId, userEmail, progressCallback = nu
       id: instanceId,
       subdomain,
       url: `https://${subdomain}.${config.domain.base}`,
-      port,
+      port: 5678, // Internal port only
       containerId,
       containerName,
       status: 'running'
