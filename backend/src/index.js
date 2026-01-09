@@ -67,8 +67,8 @@ const startServer = async () => {
     console.log('✅ Database connection established');
 
     // Socket.IO connection handling
-    // Run auto-migrations
-    await runAutoMigrations();
+    // Run auto-migrations (disabled - init.sql handles schema)
+    // await runAutoMigrations();
 
     io.on('connection', (socket) => {
       console.log(`✅ Client connected: ${socket.id}`);
