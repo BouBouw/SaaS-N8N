@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import config from './config/index.js';
 import { createPool } from './config/database.js';
 import routes from './routes/index.js';
+import { runAutoMigrations } from './scripts/auto-migrate.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -66,6 +67,9 @@ const startServer = async () => {
     console.log('✅ Database connection established');
 
     // Socket.IO connection handling
+    // Run auto-migrations
+    await runAutoMigrations();
+
     io.on('connection', (socket) => {
       console.log(`✅ Client connected: ${socket.id}`);
       
